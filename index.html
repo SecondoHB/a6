@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>End-to-End Test</title>
+    <meta name="description" content="End-to-End Testing with Playwright" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- a11y: Skip-Link für Tastaturnutzer & Screenreader -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <header class="site-header">
+      <div class="container">
+        <div class="header-top">
+          <a href="index.html" class="brand-link">
+            <svg
+              class="brand-logo"
+              aria-hidden="true"
+              width="44"
+              height="44"
+              viewBox="0 0 24 22"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+          </a>
+        </div>
+        <div class="header-content">
+          <h1>Automatisierte Tests mit Playwright</h1>
+          <p class="subtitle">
+            Mit diesem End-to-End-Test wird die Barrierefreiheit (WCAG 2.1 AA)
+          </p>
+          <p class="subtitle">
+            sowie die komplette Tastaturbedienung automatisch geprüft:
+          </p>
+          <div class="badge-wrapper">
+            <p class="badge">
+              Ich teste dieses Repo :) <br />
+              <a
+                href="https://secondohb.github.io/barrierefreies-Inhaltsverzeichnis/"
+                target="_blank"
+                >https://secondohb.github.io/barrierefreies-Inhaltsverzeichnis/</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="container">
+      <section aria-labelledby="playwright-heading" class="code-showcase">
+        <div class="code-window">
+          <div class="code-header">
+            <div class="window-dots" aria-hidden="true">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="file-name">example.spec.js</span>
+          </div>
+
+          <pre
+            tabindex="0"
+            aria-label="Playwright Testcode"
+          ><code><span class="kw">import</span> { test, expect } <span class="kw">from</span> <span class="str">'@playwright/test'</span>;
+<span class="kw">import</span> AxeBuilder <span class="kw">from</span> <span class="str">'@axe-core/playwright'</span>;
+
+test.<span class="fn">describe</span>(<span class="str">'Barrierefreiheit (a11y): Automatische Scans &amp; Tastatursteuerung'</span>, () =&gt; {
+  <span class="cmt">// ===========================================================================</span>
+  <span class="cmt">// TEIL 1: AUTOMATISCHE WCAG-PRÜFUNG MIT AXE-CORE (ALLE 3 SEITEN)</span>
+  <span class="cmt">// ===========================================================================</span>
+  <span class="kw">const</span> pages = [
+    {
+      name: <span class="str">'Startseite (index.html)'</span>,
+      url: <span class="str">'https://github.io'</span>,
+    },
+    {
+      name: <span class="str">'Schritt 1 (schritte-1.html)'</span>,
+      url: <span class="str">'https://github.io'</span>,
+    },
+    {
+      name: <span class="str">'Schritt 2 (schritte-2.html)'</span>,
+      url: <span class="str">'https://github.io'</span>,
+    },
+  ];
+
+  <span class="kw">for</span> (<span class="kw">const</span> pageInfo <span class="kw">of</span> pages) {
+    <span class="fn">test</span>(<span class="str">`WCAG-Scan (inkl. geöffnetem Menü) für ${pageInfo.name}`</span>, <span class="kw">async</span> ({
+      page,
+    }) =&gt; {
+      <span class="kw">await</span> page.<span class="fn">goto</span>(pageInfo.url);
+
+      <span class="cmt">// 1. Scan der geschlossenen Seite auf WCAG 2.0/2.1 A &amp; AA Regeln</span>
+      <span class="kw">const</span> initialScan = <span class="kw">await new</span> <span class="cls">AxeBuilder</span>({ page })
+        .<span class="fn">withTags</span>([<span class="str">'wcag2a'</span>, <span class="str">'wcag2aa'</span>, <span class="str">'wcag21a'</span>, <span class="str">'wcag21aa'</span>])
+        .<span class="fn">analyze</span>();
+
+      <span class="fn">expect</span>(initialScan.violations).<span class="fn">toEqual</span>([]);
+
+      <span class="cmt">// 2. Menü öffnen und auch den geöffneten Zustand auf Kontraste &amp; ARIA prüfen</span>
+      <span class="kw">await</span> page.<span class="fn">locator</span>(<span class="str">'#menu-toggle'</span>).<span class="fn">click</span>();
+      <span class="kw">await</span> <span class="fn">expect</span>(page.<span class="fn">locator</span>(<span class="str">'#roadmap-drawer'</span>)).<span class="fn">toBeVisible</span>();
+
+      <span class="kw">const</span> openDrawerScan = <span class="kw">await new</span> <span class="cls">AxeBuilder</span>({ page })
+        .<span class="fn">withTags</span>([<span class="str">'wcag2a'</span>, <span class="str">'wcag2aa'</span>, <span class="str">'wcag21a'</span>, <span class="str">'wcag21aa'</span>])
+        .<span class="fn">analyze</span>();
+
+      <span class="fn">expect</span>(openDrawerScan.violations).<span class="fn">toEqual</span>([]);
+    });
+  }
+  <span class="cmt">// ===========================================================================</span>
+  <span class="cmt">// TEIL 2: KOMPLETTE NUTZERREISE REIN PER TASTATUR (OHNE MAUS)</span>
+  <span class="cmt">// ===========================================================================</span>
+  <span class="fn">test</span>(<span class="str">'Alle 3 Seiten komplett ohne Maus per Tastatur navigieren und bedienen'</span>, <span class="kw">async</span> ({
+    page,
+  }) =&gt; {
+    <span class="cmt">// --- SEITE 1: index.html ---</span>
+    <span class="kw">await</span> page.<span class="fn">goto</span>(
+      <span class="str">'https://github.io'</span>,
+    );
+
+    <span class="cmt">// 1. Tab -&gt; Skip-Link</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">const</span> skipLinkIndex = page.<span class="fn">getByRole</span>(<span class="str">'link'</span>, {
+      name: <span class="str">'Direkt zum Hauptinhalt springen'</span>,
+    });
+    <span class="kw">await</span> <span class="fn">expect</span>(skipLinkIndex).<span class="fn">toBeFocused</span>();
+    <span class="kw">await</span> <span class="fn">expect</span>(skipLinkIndex).<span class="fn">toBeVisible</span>();
+
+    <span class="cmt">// 2. Tab -&gt; Inhaltsverzeichnis-Button</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">const</span> menuToggle = page.<span class="fn">locator</span>(<span class="str">'#menu-toggle'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(menuToggle).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Enter -&gt; Dialog öffnen</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Enter'</span>);
+    <span class="kw">const</span> drawer = page.<span class="fn">locator</span>(<span class="str">'#roadmap-drawer'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(drawer).<span class="fn">toBeVisible</span>();
+
+    <span class="cmt">// Fokus muss auf dem Schließen-Button (X) liegen</span>
+    <span class="kw">const</span> menuClose = page.<span class="fn">locator</span>(<span class="str">'#menu-close'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(menuClose).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Fokus-Trap rückwärts (Shift+Tab) -&gt; springt zu "Schritt 2"</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Shift+Tab'</span>);
+    <span class="kw">const</span> linkSchritt2 = drawer.<span class="fn">getByRole</span>(<span class="str">'link'</span>, { name: <span class="str">'Schritt 2'</span> });
+    <span class="kw">await</span> <span class="fn">expect</span>(linkSchritt2).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Fokus-Trap vorwärts (Tab) -&gt; springt wieder zu (X)</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(menuClose).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Tab -&gt; "Schritt 1" fokussieren und per Enter öffnen</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">const</span> linkSchritt1 = drawer.<span class="fn">getByRole</span>(<span class="str">'link'</span>, { name: <span class="str">'Schritt 1'</span> });
+    <span class="kw">await</span> <span class="fn">expect</span>(linkSchritt1).<span class="fn">toBeFocused</span>();
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Enter'</span>);
+
+    <span class="cmt">// --- SEITE 2: schritte-1.html ---</span>
+    <span class="kw">await</span> <span class="fn">expect</span>(page).<span class="fn">toHaveURL</span>(<span class="str">/schritte-1\.html/</span>);
+
+    <span class="cmt">// 1. Tab -&gt; Skip-Link</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(
+      page.<span class="fn">getByRole</span>(<span class="str">'link'</span>, { name: <span class="str">'Direkt zur Erklärung springen'</span> }),
+    ).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// 2. Tab -&gt; Menü-Button mit Leertaste (Space) öffnen</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(menuToggle).<span class="fn">toBeFocused</span>();
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Space'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(drawer).<span class="fn">toBeVisible</span>();
+
+    <span class="cmt">// Fokus landet direkt auf dem aktiven Link (aria-current="page" -&gt; Schritt 1)</span>
+    <span class="kw">await</span> <span class="fn">expect</span>(linkSchritt1).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Pfeiltaste runter -&gt; Fokus wandert zu "Schritt 2"</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'ArrowDown'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(linkSchritt2).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Escape -&gt; Menü schließen, Fokus kehrt zum Menü-Button zurück</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Escape'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(drawer).<span class="fn">toBeHidden</span>();
+    <span class="kw">await</span> <span class="fn">expect</span>(menuToggle).<span class="fn">toBeFocused</span>();
+
+    <span class="cmt">// Weiter-Link im Hauptinhalt per Tab ansteuern und zu Schritt 2 wechseln</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>); <span class="cmt">// "Zurück"-Link</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>); <span class="cmt">// "Weiter"-Link</span>
+    <span class="kw">const</span> nextLink = page.<span class="fn">getByRole</span>(<span class="str">'link'</span>, { name: <span class="str">/Weiter/i</span> });
+    <span class="kw">await</span> <span class="fn">expect</span>(nextLink).<span class="fn">toBeFocused</span>();
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Enter'</span>);
+
+    <span class="cmt">// --- SEITE 3: schritte-2.html ---</span>
+    <span class="kw">await</span> <span class="fn">expect</span>(page).<span class="fn">toHaveURL</span>(<span class="str">/schritte-2\.html/</span>);
+
+    <span class="cmt">// Skip-Link per Enter auslösen</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(
+      page.<span class="fn">getByRole</span>(<span class="str">'link'</span>, { name: <span class="str">'Direkt zur Erklärung springen'</span> }),
+    ).<span class="fn">toBeFocused</span>();
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Enter'</span>);
+
+    <span class="cmt">// Tab springt direkt in den Hauptinhalt zum "Zurück"-Link</span>
+    <span class="kw">await</span> page.keyboard.<span class="fn">press</span>(<span class="str">'Tab'</span>);
+    <span class="kw">await</span> <span class="fn">expect</span>(page.<span class="fn">getByRole</span>(<span class="str">'link'</span>, { name: <span class="str">/Zurück/i</span> })).<span class="fn">toBeFocused</span>();
+  });
+});</code></pre>
+        </div>
+        <div>
+          <br />
+          <img src="img/Test1.png"  width="98%" alt="Screenshot eines Playwright Tests." />
+        </div>
+        <div>
+          <br />
+          <img src="img/Test2.png"  width="98%" alt="Screenshot eines Playwright Tests." />
+        </div>
+        <div>
+          <br />
+          <img src="img/Test3.png"  width="98%" alt="Screenshot eines Playwright Tests." />
+        </div>
+                <div>
+          <br />
+          <img src="img/Test4.png" width="98%" alt="Screenshot eines VS Code Tree Views." />
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          This website is built with semantic HTML, CSS, and JavaScript.
+          Provided for educational purposes only, without warranty of any kind.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
